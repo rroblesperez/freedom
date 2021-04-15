@@ -45,25 +45,17 @@ df_indexes = investpy.indices.get_index_countries()
 today = datetime.today()
 yearAgo = today - timedelta(days = NUM_DAYS)
 initDate = yearAgo.strftime('%d/%m/%Y')
-endDate = today.strftime('%d/%m/%Y')
+
+endDate = findsunday(date.today() - timedelta(days = 6)).strftime('%d/%m/%Y')
+#endDate = date(2021, 4, 4).strftime('%d/%m/%Y')
+#endDate = today.strftime('%d/%m/%Y')
 
 df_list = list()
 
 for row in IBEX: #df_stocks.symbol:
     try:
         df = investpy.get_stock_historical_data(stock=row, country='spain', from_date=initDate, to_date=endDate, interval='Weekly')
-        # Construimos la última semana a partir de los datos daily
-        # if isweekend():
-        #     df_daily = investpy.get_stock_recent_data(stock=row, country='spain', interval='Daily')
-        #     open_week = df_daily.iloc[-4]['Open']
-        #     close_week = df_daily.iloc[-1]['Close']
-        #     max_week = df_daily.iloc[-4:]['High'].max()
-        #     min_week = df_daily.iloc[-4:]['Low'].min()
-        #     date_week = findsunday(df_daily.index[-1])
-        #     # La añadimos al final del dataframe
-        #     df.append(pd.DataFrame([[open_week, max_week, min_week,
-        #                              close_week, 0, 'EUR']], columns = df.columns))
-        
+
         df_daily = investpy.get_stock_recent_data(stock=row, country='spain', interval='Daily')
 
         df['Ticker']=row
@@ -98,8 +90,9 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2020, 6, 1))
-end_date = findsunday(date(2021, 4, 12))
+start_date = findsunday(date(2020, 1, 1))
+#end_date = findsunday(date(2021, 4, 4))
+end_date = findsunday(date.today()) - timedelta(days = 6)
 
 cumROC = 100
 cumROCIndex = 100
@@ -115,7 +108,7 @@ for dt in daterange(start_date, end_date):
                 min_index = df_result['mansfieldRP'].idxmin()
                 mansfieldRP_value = df.loc[dt].mansfieldRP
                 ticker_value = df.loc[dt].Ticker
-                if dt + timedelta(days = 7) < today.date():
+                if dt + timedelta(days = 7) <= end_date:
                     ROC_next_week = df.loc[dt + timedelta(days = 7)].ROC
                     ROC_next_week_index = df_index.loc[dt + timedelta(days = 7)].ROC
                 else:
@@ -141,13 +134,13 @@ for dt in daterange(start_date, end_date):
     #Almacenamos equity de sistema y de índice
     df_equity.loc[dt] = cumROC, cumROCIndex 
     
-print('\r\n RESULTADOS ÚLTIMA SEMANA:')
+print('\r\n RESULTADOS ÚLTIMA SEMANA: ', df_results_list[-2].Date[0] + timedelta(days = 8), ' al ',df_results_list[-2].Date[0] + timedelta(days = 14))
 print('\r Cartera: ', df_results_list[-2].Ticker[0], df_results_list[-2].Ticker[1], df_results_list[-2].Ticker[2])
 print('\r Retorno cartera: ', df_results_list[-2].ROCmean[0])
 print('\r Retorno indice: ', df_results_list[-2].ROCIndex[0])
 #print('\r', df_results_list[-2])
 #print('\r', df_results_list[-1])
-print('\r\n PRONÓSTICO SEMANA ACTUAL')
+print('\r\n PRONÓSTICO SEMANA ACTUAL: ', df_results_list[-1].Date[0] + timedelta(days = 8), ' al ', df_results_list[-1].Date[0] + timedelta(days = 14))
 print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
 
 
