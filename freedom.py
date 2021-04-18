@@ -95,7 +95,7 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2021, 1, 1))
+start_date = findsunday(date(2020, 1, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
 end_date = findsunday(date.today())
@@ -139,6 +139,10 @@ for dt in daterange(start_date, end_date):
     
     #Almacenamos equity de sistema y de índice
     df_equity.loc[dt] = cumROC, cumROCIndex 
+ 
+print('\r\n EQUITY: ')
+print('\r Cartera:', df_equity.Equity[-1])
+print('\r Indice:', df_equity.EquityIndex[-1])
     
 print('\r\n RESULTADOS ÚLTIMA SEMANA: ', df_results_list[-3].Date[0] + timedelta(days = 8), ' al ',df_results_list[-3].Date[0] + timedelta(days = 14))
 print('\r Cartera: ', df_results_list[-3].Ticker[0], df_results_list[-3].Ticker[1], df_results_list[-3].Ticker[2])
@@ -155,11 +159,11 @@ print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].D
 print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
 
 # %% Plot equity (system + index)
-plt.plot(df_equity.Equity)
-plt.plot(df_equity.EquityIndex)
-plt.xlabel('Time - Weeks')
-plt.ylabel('Equity')
+#plt.plot(df_equity.Equity)
+#plt.plot(df_equity.EquityIndex)
+#plt.xlabel('Time - Weeks')
+#plt.ylabel('Equity')
   
-plt.title('Mansfield')
-plt.show()
+#plt.title('Mansfield')
+#plt.show()
 
