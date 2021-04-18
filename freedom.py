@@ -9,14 +9,24 @@ Created on Tue Mar 16 15:20:21 2021
 NUM_DAYS = 365*6
 WEEKS_PER_YEAR = 52
 
-INDEX_SELECTION = 'IBEX 35'
+#INDEX_SELECTION = 'IBEX 35'
 
-STOCK_SELECTION = ['ANA', 'ACX', 'ACS', 'AENA', 'ALM', 'AMA', 'MTS', 'SABE', 'BKT', 'BBVA', 
-        'CABK', 'CLNX', 'CIEA', 'COL', 'ENAG', 'ELE', 'FER', 'FLUI', 'GRLS', 
-        'ICAG', 'IBE', 'ITX', 'IDR', 'MAP', 'MEL', 'MRL', 'NTGY', 'PHMR', 'REE',
-        'REP', 'SAN', 'SGREN', 'SLRS', 'TEF', 'VIS']
+#STOCK_SELECTION = ['ANA', 'ACX', 'ACS', 'AENA', 'ALM', 'AMA', 'MTS', 'SABE', 'BKT', 'BBVA', 
+#        'CABK', 'CLNX', 'CIEA', 'COL', 'ENAG', 'ELE', 'FER', 'FLUI', 'GRLS', 
+#        'ICAG', 'IBE', 'ITX', 'IDR', 'MAP', 'MEL', 'MRL', 'NTGY', 'PHMR', 'REE',
+#        'REP', 'SAN', 'SGREN', 'SLRS', 'TEF', 'VIS']
 
-COUNTRY_SELECTION = 'spain'
+#COUNTRY_SELECTION = 'spain'
+
+
+INDEX_SELECTION = 'DAX'
+
+STOCK_SELECTION = ['ADSGn', 'ALVG', 'BASFn', 'BAYGn', 'BMWG', 'CONG', '1COV', 'DAIGn',
+                   'DHER', 'DBKGn', 'DB1Gn', 'DPWGn', 'DTEGn', 'DWNG', 'EONGn', 'FMEG',
+                   'FREG', 'HEIG', 'HNKG_p', 'IFXGn', 'LINI', 'MRCG', 'MTXGn', 'MUVGn',
+                   'RWEG', 'SAPG', 'SIEGn', 'VOWG_p', 'VNAn'] #Falta Siemens Energy ENR1n
+
+COUNTRY_SELECTION = 'germany'
 
 # %% Imports
 from datetime import datetime, timedelta, date
@@ -89,7 +99,7 @@ for df in df_list:
     df['mansfieldRP'] = mansfieldRP
 
 # %%
-RESULTS_SIZE = 3
+RESULTS_SIZE = 1
 
 df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
@@ -98,7 +108,7 @@ df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 start_date = findsunday(date(2020, 1, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
-end_date = findsunday(date.today())
+end_date = findsunday(date.today() - timedelta(days = 6))
 
 cumROC = 100
 cumROCIndex = 100
@@ -109,7 +119,7 @@ for dt in daterange(start_date, end_date):
     # Buscamos los valores con mayor mansfieldRP
     for df in df_list:
         try:
-            if df.loc[dt].mansfieldRP > df_result['mansfieldRP'].min():       
+            if df.loc[dt].mansfieldRP > df_result['mansfieldRP'].min() and df.loc[dt].mansfieldRP > 2.5:       
                 # Sustituimos la menor con la actual
                 min_index = df_result['mansfieldRP'].idxmin()
                 mansfieldRP_value = df.loc[dt].mansfieldRP
@@ -145,25 +155,25 @@ print('\r Cartera:', df_equity.Equity[-1])
 print('\r Indice:', df_equity.EquityIndex[-1])
     
 print('\r\n RESULTADOS ÚLTIMA SEMANA: ', df_results_list[-3].Date[0] + timedelta(days = 8), ' al ',df_results_list[-3].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-3].Ticker[0], df_results_list[-3].Ticker[1], df_results_list[-3].Ticker[2])
+print('\r Cartera: ', df_results_list[-3].Ticker[0])
 print('\r Retorno cartera: ', df_results_list[-3].ROCmean[0])
 print('\r Retorno indice: ', df_results_list[-3].ROCIndex[0])
 #print('\r', df_results_list[-2])
 #print('\r', df_results_list[-1])
 print('\r\n RESULTADOS SEMANA ACTUAL: ', df_results_list[-2].Date[0] + timedelta(days = 8), ' al ', df_results_list[-2].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-2].Ticker[0], df_results_list[-2].Ticker[1], df_results_list[-2].Ticker[2])
+print('\r Cartera: ', df_results_list[-2].Ticker[0])
 print('\r Retorno latente cartera: ', df_results_list[-2].ROCmean[0])
 print('\r Retorno latente indice: ', df_results_list[-2].ROCIndex[0])
 
 print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].Date[0] + timedelta(days = 8), ' al ', df_results_list[-1].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
+print('\r Cartera: ', df_results_list[-1].Ticker[0])
 
-# %% Plot equity (system + index)
-#plt.plot(df_equity.Equity)
-#plt.plot(df_equity.EquityIndex)
-#plt.xlabel('Time - Weeks')
-#plt.ylabel('Equity')
+#%% Plot equity (system + index)
+plt.plot(df_equity.Equity)
+plt.plot(df_equity.EquityIndex)
+plt.xlabel('Time - Weeks')
+plt.ylabel('Equity')
   
-#plt.title('Mansfield')
-#plt.show()
+plt.title('Mansfield')
+plt.show()
 
