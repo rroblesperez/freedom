@@ -6,17 +6,24 @@ Created on Tue Mar 16 15:20:21 2021
 """
 # %% Consts
 
-NUM_DAYS = 365*6
+NUM_DAYS = 365*3
 WEEKS_PER_YEAR = 52
 
-INDEX_SELECTION = 'IBEX 35'
+INDEX_SELECTION = 'NASDAQ'
 
-STOCK_SELECTION = ['ANA', 'ACX', 'ACS', 'AENA', 'ALM', 'AMA', 'MTS', 'SABE', 'BKT', 'BBVA', 
-        'CABK', 'CLNX', 'CIEA', 'COL', 'ENAG', 'ELE', 'FER', 'FLUI', 'GRLS', 
-        'ICAG', 'IBE', 'ITX', 'IDR', 'MAP', 'MEL', 'MRL', 'NTGY', 'PHMR', 'REE',
-        'REP', 'SAN', 'SGREN', 'SLRS', 'TEF', 'VIS']
+STOCK_SELECTION = ['ATVI', 'ADBE', 'ADP', 'ALXN', 'ALGN', 'GOOGL', 'GOOG', 'AMZN', 'AMD',
+                   'AEP', 'AMGN', 'ADI', 'ANSS', 'AAPL', 'AMAT', 'ASML', 'TEAM', 'ADSK',
+                   'BIDU', 'BIIB', 'BKNG', 'AVGO', 'CDNS', 'CDW', 'CERN', 'CHTR', 'CHKP',
+                   'CTAS', 'CSCO', 'CTSH', 'CMCSA', 'CPRT', 'COST', 'CSX', 'DXCM', 'DOCU',
+                   'DLTR', 'EBAY', 'EA', 'EXC', 'FB', 'FAST', 'FISV', 'FOXA', 'FOX', 'GILD',
+                   'IDXX', 'ILMN', 'INCY', 'INTC', 'INTU', 'ISRG', 'JD', 'KDP', 'KLAC', 'KHC',
+                   'LRCX', 'LULU', 'MAR', 'MRVL', 'MTCH', 'MXIM', 'MELI', 'MCHP', 'MU',
+                   'MSFT', 'MDLZ', 'MNST', 'NTES', 'NFLX', 'NVDA', 'NXPI', 'OKTA', 'ORLY',
+                   'PCAR', 'PAYX', 'PYPL', 'PTON', 'PEP', 'PDD', 'QCOM', 'REGN', 'ROST',
+                   'SGEN', 'SIRI', 'SWKS', 'SPLK', 'SBUX', 'SNPS', 'TMUS', 'TSLA',
+                   'TXN', 'TCOM', 'VRSN', 'VRSK', 'VRTX', 'WBA', 'WDAY', 'XEL', 'XLNX', 'ZM'] #Falta Moderna MRNA
 
-COUNTRY_SELECTION = 'spain'
+COUNTRY_SELECTION = 'united states'
 
 # %% Imports
 from datetime import datetime, timedelta, date
@@ -95,10 +102,10 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2020, 1, 1))
+start_date = findsunday(date(2020, 4, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
-end_date = findsunday(date.today())
+end_date = findsunday(date.today() - timedelta(days = 1))
 
 cumROC = 100
 cumROCIndex = 100
@@ -159,11 +166,11 @@ print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].D
 print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
 
 # %% Plot equity (system + index)
-#plt.plot(df_equity.Equity)
-#plt.plot(df_equity.EquityIndex)
-#plt.xlabel('Time - Weeks')
-#plt.ylabel('Equity')
+plt.plot(df_equity.Equity)
+plt.plot(df_equity.EquityIndex)
+plt.xlabel('Time - Weeks')
+plt.ylabel('Equity')
   
-#plt.title('Mansfield')
-#plt.show()
+plt.title('Mansfield')
+plt.show()
 
