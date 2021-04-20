@@ -103,6 +103,12 @@ end_date = findsunday(date.today())
 cumROC = 100
 cumROCIndex = 100
 
+success_rate = 0
+success = 0
+fail = 0
+fail_acc = 0
+fail_max = 0
+
 for dt in daterange(start_date, end_date):
     #print(dt.strftime("Analizando semana %d-%m-%Y"))
     df_result = pd.DataFrame(np.zeros((RESULTS_SIZE, 6)), columns = ['Date', 'mansfieldRP', 'Ticker', 'Name', 'ROC', 'ROCIndex'])
@@ -128,9 +134,19 @@ for dt in daterange(start_date, end_date):
             print('Date unavailable:', df['Ticker'][-1])
             
     ROCMean = df_result['ROC'].mean()
+    ROCIndex = df_result['ROCIndex'][0]
+    if ROCMean > ROCIndex:
+        success = success + 1
+        fail_acc = 0
+    else:
+        fail = fail + 1
+        fail_acc = fail_acc + 1
+        if fail_acc > fail_max:
+            fail_max = fail_acc
+    
     #Almacenamos retornos acumulados
     cumROC = cumROC * (1 + (ROCMean / 100))
-    cumROCIndex = cumROCIndex * (1 + (df_result['ROCIndex'][0] / 100))
+    cumROCIndex = cumROCIndex * (1 + (ROCIndex / 100))
     
     df_result['ROCmean'] = ROCMean
     df_result['AccROC'] = cumROC
@@ -140,6 +156,13 @@ for dt in daterange(start_date, end_date):
     #Almacenamos equity de sistema y de índice
     df_equity.loc[dt] = cumROC, cumROCIndex 
  
+
+print('\r\n SUCCESS RATE: ')
+print('\r Aciertos:', success)
+print('\r Fallos:', fail)
+print('\r Máximo número de fallos consecutivos: ', fail_max)
+print('\r Tasa:', success/(success + fail))
+
 print('\r\n EQUITY: ')
 print('\r Cartera:', df_equity.Equity[-1])
 print('\r Indice:', df_equity.EquityIndex[-1])
@@ -159,11 +182,11 @@ print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].D
 print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
 
 # %% Plot equity (system + index)
-#plt.plot(df_equity.Equity)
-#plt.plot(df_equity.EquityIndex)
-#plt.xlabel('Time - Weeks')
-#plt.ylabel('Equity')
+plt.plot(df_equity.Equity)
+plt.plot(df_equity.EquityIndex)
+plt.xlabel('Time - Weeks')
+plt.ylabel('Equity')
   
-#plt.title('Mansfield')
-#plt.show()
+plt.title('Mansfield')
+plt.show()
 
