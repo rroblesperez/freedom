@@ -85,8 +85,9 @@ df_index['ROC'] = df_index.Close.pct_change() * 100
 # %% Calculate Relative Performace y 52 weeks SMA Relative Performance
 for df in df_list:
     df['ROC'] = df.Close.pct_change() * 100
-    RP = (df.Close/df_index.Close)*100
-    SMA52RP = RP.rolling(window=52).mean()
+    RPD = (df.Close/df_index.Close)*100
+    RP = RPD.rolling(window=1).mean()
+    SMA52RP = RPD.rolling(window=30).mean()
     df['RP'] = RP
     df['SMA52RP'] = SMA52RP
 
@@ -102,7 +103,7 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2020, 4, 1))
+start_date = findsunday(date(2021, 1, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
 end_date = findsunday(date.today() - timedelta(days = 1))
