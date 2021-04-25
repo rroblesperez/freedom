@@ -9,12 +9,46 @@ Created on Tue Mar 16 15:20:21 2021
 NUM_DAYS = 365*6
 WEEKS_PER_YEAR = 52
 
+AVG_PERIODS = 52
+RP_FILTER = 2
+
 INDEX_SELECTION = 'IBEX 35'
 
-STOCK_SELECTION = ['ANA', 'ACX', 'ACS', 'AENA', 'ALM', 'AMA', 'MTS', 'SABE', 'BKT', 'BBVA', 
-        'CABK', 'CLNX', 'CIEA', 'COL', 'ENAG', 'ELE', 'FER', 'FLUI', 'GRLS', 
-        'ICAG', 'IBE', 'ITX', 'IDR', 'MAP', 'MEL', 'MRL', 'NTGY', 'PHMR', 'REE',
-        'REP', 'SAN', 'SGREN', 'SLRS', 'TEF', 'VIS']
+STOCK_SELECTION = ['ANA',    # 0
+                   'ACX',    # 1
+                   'ACS',    # 2
+                   'AENA',   # 3
+                   'ALM',    # 4
+                   'AMA',    # 5
+                   'MTS',    # 6
+                   'SABE',   # 7 
+                   'BKT',    # 8
+                   'BBVA',   # 9
+                   'CABK',   #10
+                   'CLNX',   #11 
+                   'CIEA',   #12
+                   'COL',    #13
+                   'ENAG',   #14 
+                   'ELE',    #15
+                   'FER',    #16
+                   'FLUI',   #17
+                   'GRLS',   #18
+                   'ICAG',   #19
+                   'IBE',    #20
+                   'ITX',    #21
+                   'IDR',    #22
+                   'MAP',    #23
+                   'MEL',    #24
+                   'MRL',    #25
+                   'NTGY',   #26
+                   'PHMR',   #27
+                   'REE',    #28
+                   'REP',    #29
+                   'SAN',    #30
+                   'SGREN',  #31
+                   'SLRS',   #32
+                   'TEF',    #33
+                   'VIS']    #34
 
 COUNTRY_SELECTION = 'spain'
 
@@ -78,8 +112,9 @@ df_index['ROC'] = df_index.Close.pct_change() * 100
 # %% Calculate Relative Performace y 52 weeks SMA Relative Performance
 for df in df_list:
     df['ROC'] = df.Close.pct_change() * 100
-    RP = (df.Close/df_index.Close)*100
-    SMA52RP = RP.rolling(window=52).mean()
+    RPD = (df.Close/df_index.Close)*100
+    RP = RPD.rolling(window=RP_FILTER).mean()
+    SMA52RP = RPD.rolling(window=AVG_PERIODS).mean()
     df['RP'] = RP
     df['SMA52RP'] = SMA52RP
 
@@ -95,10 +130,10 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2020, 1, 1))
+start_date = findsunday(date(2021, 1, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
-end_date = findsunday(date.today())
+end_date = findsunday(date.today() - timedelta(days = 1))
 
 cumROC = 100
 cumROCIndex = 100
