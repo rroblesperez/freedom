@@ -14,41 +14,41 @@ RP_FILTER = 2
 
 INDEX_SELECTION = 'IBEX 35'
 
-STOCK_SELECTION = ['ANA',    # 0
-                   'ACX',    # 1
-                   'ACS',    # 2
-                   'AENA',   # 3
-                   'ALM',    # 4
-                   'AMA',    # 5
-                   'MTS',    # 6
-                   'SABE',   # 7 
-                   'BKT',    # 8
-                   'BBVA',   # 9
-                   'CABK',   #10
-                   'CLNX',   #11 
-                   'CIEA',   #12
-                   'COL',    #13
-                   'ENAG',   #14 
-                   'ELE',    #15
-                   'FER',    #16
-                   'FLUI',   #17
-                   'GRLS',   #18
-                   'ICAG',   #19
-                   'IBE',    #20
-                   'ITX',    #21
-                   'IDR',    #22
-                   'MAP',    #23
-                   'MEL',    #24
-                   'MRL',    #25
-                   'NTGY',   #26
-                   'PHMR',   #27
-                   'REE',    #28
-                   'REP',    #29
-                   'SAN',    #30
-                   'SGREN',  #31
-                   'SLRS',   #32
-                   'TEF',    #33
-                   'VIS']    #34
+STOCK_SELECTION = ['ANA',    # 0 Acciona
+                   'ACX',    # 1 Acerinox
+                   'ACS',    # 2 ACS -Actividades de Construccion y Servicios
+                   'AENA',   # 3 Aena
+                   'ALM',    # 4 Almirall
+                   'AMA',    # 5 Amadeus
+                   'MTS',    # 6 ArcelorMittal
+                   'SABE',   # 7 Banco Sabadell
+                   'BKT',    # 8 Bankinter
+                   'BBVA',   # 9 Banco Bilbao Vizcaya Argentaria
+                   'CABK',   #10 CaixaBank
+                   'CLNX',   #11 Cellnex
+                   'CIEA',   #12 Cie Automotive
+                   'COL',    #13 Colonial
+                   'ENAG',   #14 Enagas
+                   'ELE',    #15 Endesa
+                   'FER',    #16 Ferrovial
+                   'FLUI',   #17 Fluidra
+                   'GRLS',   #18 Grifols
+                   'ICAG',   #19 Iberia
+                   'IBE',    #20 Iberdrola
+                   'ITX',    #21 Inditex
+                   'IDR',    #22 Indra
+                   'MAP',    #23 Mapfre
+                   'MEL',    #24 Sol Melia
+                   'MRL',    #25 Merlin Properties
+                   'NTGY',   #26 Naturgy
+                   'PHMR',   #27 Pharmamar
+                   'REE',    #28 Red electrica
+                   'REP',    #29 Repsol
+                   'SAN',    #30 Banco Santander
+                   'SGREN',  #31 Gamesa
+                   'SLRS',   #32 Solaria
+                   'TEF',    #33 Telefonica
+                   'VIS']    #34 Viscofan
 
 COUNTRY_SELECTION = 'spain'
 
@@ -130,7 +130,7 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2021, 1, 1))
+start_date = findsunday(date(2020, 4, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
 end_date = findsunday(date.today() - timedelta(days = 1))
@@ -217,6 +217,7 @@ print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].D
 print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
 
 # %% Plot equity (system + index)
+plt.figure()
 plt.plot(df_equity.Equity)
 plt.plot(df_equity.EquityIndex)
 plt.xlabel('Time - Weeks')
@@ -225,3 +226,20 @@ plt.ylabel('Equity')
 plt.title('Mansfield')
 plt.show()
 
+plt.figure()
+plt.plot(df_list[17].mansfieldRP[start_date:end_date]) #Azul
+plt.plot(df_list[17].Close[start_date:end_date]/df_list[17].Close[start_date]) #Naranja
+
+plt.figure()
+plt.plot(df_list[24].mansfieldRP[start_date:end_date]) #Azul
+plt.plot(df_list[24].Close[start_date:end_date]/df_list[24].Close[start_date]) #Naranja
+
+plt.figure()
+plt.plot(df_list[6].mansfieldRP[start_date:end_date])  #Azul
+plt.plot(df_list[6].Close[start_date:end_date]/df_list[6].Close[start_date])  #Naranja
+
+plt.xlabel('Time - Weeks')
+plt.ylabel('Equity')
+  
+plt.title('Mansfield')
+plt.show()
