@@ -130,7 +130,7 @@ df_results_list = list()
 df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
 
-start_date = findsunday(date(2020, 4, 1))
+start_date = findsunday(date(2020, 6, 1))
 #end_date = findsunday(date(2021, 4, 4))
 #end_date = findsunday(date.today()) - timedelta(days = 6)
 end_date = findsunday(date.today() - timedelta(days = 1))
@@ -226,20 +226,20 @@ plt.ylabel('Equity')
 plt.title('Mansfield')
 plt.show()
 
-plt.figure()
-plt.plot(df_list[17].mansfieldRP[start_date:end_date]) #Azul
-plt.plot(df_list[17].Close[start_date:end_date]/df_list[17].Close[start_date]) #Naranja
+#plt.figure()
+#plt.plot(df_list[17].mansfieldRP[start_date:end_date]) #Azul
+#plt.plot(df_list[17].Close[start_date:end_date]/df_list[17].Close[start_date]) #Naranja
 
-plt.figure()
-plt.plot(df_list[24].mansfieldRP[start_date:end_date]) #Azul
-plt.plot(df_list[24].Close[start_date:end_date]/df_list[24].Close[start_date]) #Naranja
+#plt.figure()
+#plt.plot(df_list[24].mansfieldRP[start_date:end_date]) #Azul
+#plt.plot(df_list[24].Close[start_date:end_date]/df_list[24].Close[start_date]) #Naranja
 
-plt.figure()
-plt.plot(df_list[6].mansfieldRP[start_date:end_date])  #Azul
-plt.plot(df_list[6].Close[start_date:end_date]/df_list[6].Close[start_date])  #Naranja
+#plt.figure()
+#plt.plot(df_list[6].mansfieldRP[start_date:end_date])  #Azul
+#plt.plot(df_list[6].Close[start_date:end_date]/df_list[6].Close[start_date])  #Naranja
 
-plt.xlabel('Time - Weeks')
-plt.ylabel('Equity')
+#plt.xlabel('Time - Weeks')
+#plt.ylabel('Equity')
   
-plt.title('Mansfield')
-plt.show()
+#plt.title('Mansfield')
+#plt.show()
