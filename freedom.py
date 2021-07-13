@@ -6,15 +6,13 @@ Created on Tue Mar 16 15:20:21 2021
 """
 # %% Consts
 
-NUM_DAYS = 365*6
-WEEKS_PER_YEAR = 52
 
 AVG_PERIODS = 52
 RP_FILTER = 2
 
 INDEX_SELECTION = 'IBEX 35'
 
-STOCK_SELECTION = ['ANA',    # 0 Acciona
+STOCK_SELECTION = {'ANA',    # 0 Acciona
                    'ACX',    # 1 Acerinox
                    'ACS',    # 2 ACS -Actividades de Construccion y Servicios
                    'AENA',   # 3 Aena
@@ -48,7 +46,7 @@ STOCK_SELECTION = ['ANA',    # 0 Acciona
                    'SGREN',  #31 Gamesa
                    'SLRS',   #32 Solaria
                    'TEF',    #33 Telefonica
-                   'VIS']    #34 Viscofan
+                   'VIS'}    #34 Viscofan
 
 COUNTRY_SELECTION = 'spain'
 
@@ -58,13 +56,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import investpy
-import seaborn as sns
-import mplfinance as mpf
+#import seaborn as sns
+#import mplfinance as mpf
 
 # %% Weekly data
-def daterange(start_date, end_date):
-     for n in range(0, int((end_date - start_date).days) + 1, 7):
-         yield start_date + timedelta(n)
+#def daterange(start_date, end_date):
+#     for n in range(0, int((end_date - start_date).days) + 1, 7):
+#         yield start_date + timedelta(n)
          
 # %% Sunday finder
 def findsunday(date):
@@ -72,160 +70,264 @@ def findsunday(date):
     return sunday
 
 # %% Is weekend?
-def isweekend():
-    return datetime.today().weekday() >= 5
+#def isweekend():
+#    return datetime.today().weekday() >= 5
     
 # %% Get stocks and indexes
-df_stocks = investpy.stocks.get_stocks(country=COUNTRY_SELECTION)
-df_indexes = investpy.indices.get_index_countries()
+#df_stocks = investpy.stocks.get_stocks(country=COUNTRY_SELECTION)
+#df_indexes = investpy.indices.get_index_countries()
 
 # %% Fecth data
+
+RESULTS_SIZE = 3
+START_DATE = findsunday(date(2020, 6, 28))
+END_DATE = findsunday(date.today() - timedelta(days = 1))
+
+
+pastDateToFetchData = START_DATE - timedelta(days = AVG_PERIODS * 7)
+initDate = pastDateToFetchData.strftime('%d/%m/%Y')
+
+# Analizamos hasta hoy
 today = datetime.today()
-yearAgo = today - timedelta(days = NUM_DAYS)
-initDate = yearAgo.strftime('%d/%m/%Y')
-
 endDate = findsunday(date.today()).strftime('%d/%m/%Y')
-#endDate = findsunday(date.today() - timedelta(days = 6)).strftime('%d/%m/%Y')
-#endDate = date(2021, 4, 4).strftime('%d/%m/%Y')
-#endDate = today.strftime('%d/%m/%Y')
 
-df_list = list()
+df_price_initializated = 0;
 
 for row in STOCK_SELECTION: #df_stocks.symbol:
     try:
         df = investpy.get_stock_historical_data(stock=row, country=COUNTRY_SELECTION, from_date=initDate, to_date=endDate, interval='Weekly')
+        if df_price_initializated == 0:
+            df_price_initializated = 1
+            df_price = pd.DataFrame(index=df.index, columns = STOCK_SELECTION)
+            df_true_range = pd.DataFrame(index=df.index, columns = STOCK_SELECTION)
+        # Price is considered at close
+        df_price[row] = df.Close
+        # ATR Calculations
+        df_high_low = df.High - df.Low
+        df_high_close = np.abs(df.High - df.Close.shift())
+        df_low_close = np.abs(df.Low - df.Close.shift())
+        df_ranges = pd.concat([df_high_low, df_high_close, df_low_close], axis=1)
+        df_true_range[row] = np.max(df_ranges, axis=1)
 
-        df_daily = investpy.get_stock_recent_data(stock=row, country=COUNTRY_SELECTION, interval='Daily')
 
-        df['Ticker']=row
-        if df.shape[0] > WEEKS_PER_YEAR:
-            df_list.append(df)
-        else:
-            print('Insufficient data: ',row)
+        #df_daily = investpy.get_stock_recent_data(stock=row, country=COUNTRY_SELECTION, interval='Daily')
+
+ #       df['Ticker']=row
+ #       if df.shape[0] > WEEKS_PER_YEAR:
+            #df_price = pd.DataFrame(np.zeros((0, len(STOCK_SELECTION))), index=df.index, columns = STOCK_SELECTION)
+
+ #           df_list.append(df)
+ #       else:
+ #           print('Insufficient data: ',row)
     except IndexError:
         print('Stock unavailable: ', row)
     
     
-df_index = investpy.get_index_historical_data(index=INDEX_SELECTION, country=COUNTRY_SELECTION, from_date=initDate, to_date=endDate, interval='Weekly')
-df_index['ROC'] = df_index.Close.pct_change() * 100
+df_index_raw = investpy.get_index_historical_data(index=INDEX_SELECTION, country=COUNTRY_SELECTION, from_date=initDate, to_date=endDate, interval='Weekly')
+df_index = pd.DataFrame(np.zeros((df_index_raw.index.size, 2)), index=df_index_raw.index,  columns = ['Price', 'ROC'])
+df_index['Close'] = df_index_raw.Close
+df_index['ROC'] = df_index_raw.Close.pct_change() * 100
+
+
+# %% Calculate ATR
+df_atr = df_true_range.rolling(14).sum()/14
+df_atr_norm = df_atr/df_price
+
+# %% Calculate SMA30
+df_sma30 = df_price.rolling(window=30).mean()
 
 # %% Calculate Relative Performace y 52 weeks SMA Relative Performance
-for df in df_list:
-    df['ROC'] = df.Close.pct_change() * 100
-    RPD = (df.Close/df_index.Close)*100
-    RP = RPD.rolling(window=RP_FILTER).mean()
-    SMA52RP = RPD.rolling(window=AVG_PERIODS).mean()
-    df['RP'] = RP
-    df['SMA52RP'] = SMA52RP
+df_roc = df_price.pct_change() * 100
+df_rpd = df_price.div(df_index.Close, axis=0)
+df_rp = df_rpd.rolling(window=RP_FILTER).mean()
+df_sma52rp = df_rpd.rolling(window=AVG_PERIODS).mean()
+df_mansfield = (df_rp.div(df_sma52rp, axis = 0) - 1) * 10
+df_mansfield = df_mansfield.dropna()
+df_mansfield_sorted = df_mansfield.sort_values(df_mansfield.last_valid_index(), axis=1, ascending=False)
+
+df_ia = df_mansfield/df_atr_norm
+df_ia = df_ia.dropna()
+df_ia_sorted = df_ia.sort_values(df_ia.last_valid_index(), axis=1, ascending=False)
+
+# Dato para construir portfolio
+df_target = df_mansfield
+
+#for df in df_list:
+#    df['ROC'] = df.Close.pct_change() * 100
+#    RPD = (df.Close/df_index.Close)*100
+#    RP = RPD.rolling(window=RP_FILTER).mean()
+#    SMA52RP = RPD.rolling(window=AVG_PERIODS).mean()
+#    df['RP'] = RP
+#    df['SMA52RP'] = SMA52RP
 
 # %% Calculate MRP
-for df in df_list:
-    mansfieldRP = (df['RP']/df['SMA52RP']-1)*10
-    df['mansfieldRP'] = mansfieldRP
+#for df in df_list:
+#    mansfieldRP = (df['RP']/df['SMA52RP']-1)*10
+#    df['mansfieldRP'] = mansfieldRP
 
-# %%
-RESULTS_SIZE = 3
+# %% Portfolio construction
 
-df_results_list = list()
-df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
+# Recogemos los RESULTS_SIZE valores con mayor Mansfield y construimos el portafolio
+df_portfolio = pd.DataFrame(df_target.columns.values[np.argsort(-df_target.values, axis=1)[:, :RESULTS_SIZE]], index=df_target.index)
+#for i in range(df_portfolio.columns.size):
+    #df_portfolio.columns_
+
+# Capturamos los retornos de cada valor del portafolio y rellenamos valores del índice
+df_portfolio_roc = pd.DataFrame(np.zeros((df_roc.index.size, RESULTS_SIZE+4)), index=df_roc.index)
+for dt in df_portfolio.index:
+    if dt + timedelta(days = 7) > START_DATE and dt + timedelta(days = 7) <= END_DATE:
+        for col in range(RESULTS_SIZE):
+            df_portfolio_roc.loc[dt][col] = df_roc.loc[dt + timedelta(days = 7)][df_portfolio.loc[dt][col]]
+        df_portfolio_roc.loc[dt][RESULTS_SIZE + 2] = df_index.ROC[dt + timedelta(days = 7)]
+# Calculamos el retorno medio
+df_portfolio_roc[RESULTS_SIZE] = df_portfolio_roc.loc[: , 0: RESULTS_SIZE-1].mean(axis=1)
+# Calculamos el retorno acumulado para el portfolio...
+df_portfolio_roc[RESULTS_SIZE+1] = (1 + df_portfolio_roc.loc[: , RESULTS_SIZE]/100).cumprod() * 100
+# ...y para el índice
+df_portfolio_roc[RESULTS_SIZE+3] = (1 + df_portfolio_roc.loc[: , RESULTS_SIZE+2]/100).cumprod() * 100
+# Concatenamos y guardamos todo en el dataframe del portafolio
+df_portfolio = pd.concat([df_portfolio, df_portfolio_roc], axis = 1)
+# Recortamos datos vacíos
+df_portfolio = df_portfolio[START_DATE:END_DATE]
 
 
-start_date = findsunday(date(2020, 6, 1))
-#end_date = findsunday(date(2021, 4, 4))
-#end_date = findsunday(date.today()) - timedelta(days = 6)
-end_date = findsunday(date.today() - timedelta(days = 1))
 
-cumROC = 100
-cumROCIndex = 100
+#df_results_list = list()
+#df_equity = pd.DataFrame(index=df.index, columns = ['Equity', 'EquityIndex'])
 
-success_rate = 0
-success = 0
-fail = 0
-fail_acc = 0
-fail_max = 0
 
-for dt in daterange(start_date, end_date):
-    #print(dt.strftime("Analizando semana %d-%m-%Y"))
-    df_result = pd.DataFrame(np.zeros((RESULTS_SIZE, 6)), columns = ['Date', 'mansfieldRP', 'Ticker', 'Name', 'ROC', 'ROCIndex'])
-    # Buscamos los valores con mayor mansfieldRP
-    for df in df_list:
-        try:
-            if df.loc[dt].mansfieldRP > df_result['mansfieldRP'].min():       
-                # Sustituimos la menor con la actual
-                min_index = df_result['mansfieldRP'].idxmin()
-                mansfieldRP_value = df.loc[dt].mansfieldRP
-                ticker_value = df.loc[dt].Ticker
-                if dt + timedelta(days = 7) <= end_date:
-                    ROC_next_week = df.loc[dt + timedelta(days = 7)].ROC
-                    ROC_next_week_index = df_index.loc[dt + timedelta(days = 7)].ROC
-                else:
-                    ROC_next_week = 0
-                    ROC_next_week_index = 0
-                # Rellenamos los nombres
-                stock_name = df_stocks.loc[df_stocks['symbol'] == ticker_value]['name'].iloc[0]
-                #Guardamos el resultado
-                df_result.loc[min_index] = dt, mansfieldRP_value, ticker_value, stock_name, ROC_next_week, ROC_next_week_index
-        except KeyError:
-            print('Date unavailable:', df['Ticker'][-1])
+
+
+#cumROC = 100
+#cumROCIndex = 100
+
+#success_rate = 0
+#success = 0
+#fail = 0
+#fail_acc = 0
+#fail_max = 0
+
+#for dt in daterange(start_date, end_date):
+#    #print(dt.strftime("Analizando semana %d-%m-%Y"))
+#    df_result = pd.DataFrame(np.zeros((RESULTS_SIZE, 6)), columns = ['Date', 'mansfieldRP', 'Ticker', 'Name', 'ROC', 'ROCIndex'])
+#    # Buscamos los valores con mayor mansfieldRP
+#    for df in df_list:
+#        try:
+#            if df.loc[dt].mansfieldRP > df_result['mansfieldRP'].min():       
+#                # Sustituimos la menor con la actual
+#                min_index = df_result['mansfieldRP'].idxmin()
+#                mansfieldRP_value = df.loc[dt].mansfieldRP
+#                ticker_value = df.loc[dt].Ticker
+#                if dt + timedelta(days = 7) <= end_date:
+#                    ROC_next_week = df.loc[dt + timedelta(days = 7)].ROC
+#                    ROC_next_week_index = df_index.loc[dt + timedelta(days = 7)].ROC
+#                else:
+#                    ROC_next_week = 0
+#                    ROC_next_week_index = 0
+#                # Rellenamos los nombres
+#                stock_name = df_stocks.loc[df_stocks['symbol'] == ticker_value]['name'].iloc[0]
+#                #Guardamos el resultado
+#                df_result.loc[min_index] = dt, mansfieldRP_value, ticker_value, stock_name, ROC_next_week, ROC_next_week_index
+#        except KeyError:
+#            print('Date unavailable:', df['Ticker'][-1])
             
-    ROCMean = df_result['ROC'].mean()
-    ROCIndex = df_result['ROCIndex'][0]
-    if ROCMean > ROCIndex:
-        success = success + 1
-        fail_acc = 0
-    else:
-        fail = fail + 1
-        fail_acc = fail_acc + 1
-        if fail_acc > fail_max:
-            fail_max = fail_acc
+#    ROCMean = df_result['ROC'].mean()
+#    ROCIndex = df_result['ROCIndex'][0]
+#    if ROCMean > ROCIndex:
+#        success = success + 1
+#        fail_acc = 0
+#    else:
+#        fail = fail + 1
+#        fail_acc = fail_acc + 1
+#        if fail_acc > fail_max:
+#            fail_max = fail_acc
     
     #Almacenamos retornos acumulados
-    cumROC = cumROC * (1 + (ROCMean / 100))
-    cumROCIndex = cumROCIndex * (1 + (ROCIndex / 100))
+#    cumROC = cumROC * (1 + (ROCMean / 100))
+#    cumROCIndex = cumROCIndex * (1 + (ROCIndex / 100))
     
-    df_result['ROCmean'] = ROCMean
-    df_result['AccROC'] = cumROC
-    df_result['AccROCIndex'] = cumROCIndex
-    df_results_list.append(df_result)
+#    df_result['ROCmean'] = ROCMean
+#    df_result['AccROC'] = cumROC
+#    df_result['AccROCIndex'] = cumROCIndex
+#    df_results_list.append(df_result)
     
-    #Almacenamos equity de sistema y de índice
-    df_equity.loc[dt] = cumROC, cumROCIndex 
+#    #Almacenamos equity de sistema y de índice
+#    df_equity.loc[dt] = cumROC, cumROCIndex 
  
 
-print('\r\n SUCCESS RATE: ')
-print('\r Aciertos:', success)
-print('\r Fallos:', fail)
-print('\r Máximo número de fallos consecutivos: ', fail_max)
-print('\r Tasa:', success/(success + fail))
+#print('\r\n SUCCESS RATE: ')
+#print('\r Aciertos:', success)
+#print('\r Fallos:', fail)
+#print('\r Máximo número de fallos consecutivos: ', fail_max)
+#print('\r Tasa:', success/(success + fail))
 
-print('\r\n EQUITY: ')
-print('\r Cartera:', df_equity.Equity[-1])
-print('\r Indice:', df_equity.EquityIndex[-1])
+#print('\r\n EQUITY: ')
+#print('\r Cartera:', df_equity.Equity[-1])
+#print('\r Indice:', df_equity.EquityIndex[-1])
     
-print('\r\n RESULTADOS ÚLTIMA SEMANA: ', df_results_list[-3].Date[0] + timedelta(days = 8), ' al ',df_results_list[-3].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-3].Ticker[0], df_results_list[-3].Ticker[1], df_results_list[-3].Ticker[2])
-print('\r Retorno cartera: ', df_results_list[-3].ROCmean[0])
-print('\r Retorno indice: ', df_results_list[-3].ROCIndex[0])
+#print('\r\n RESULTADOS ÚLTIMA SEMANA: ', df_results_list[-3].Date[0] + timedelta(days = 8), ' al ',df_results_list[-3].Date[0] + timedelta(days = 14))
+#print('\r Cartera: ', df_results_list[-3].Ticker[0], df_results_list[-3].Ticker[1], df_results_list[-3].Ticker[2])
+#print('\r Retorno cartera: ', df_results_list[-3].ROCmean[0])
+#print('\r Retorno indice: ', df_results_list[-3].ROCIndex[0])
 #print('\r', df_results_list[-2])
 #print('\r', df_results_list[-1])
-print('\r\n RESULTADOS SEMANA ACTUAL: ', df_results_list[-2].Date[0] + timedelta(days = 8), ' al ', df_results_list[-2].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-2].Ticker[0], df_results_list[-2].Ticker[1], df_results_list[-2].Ticker[2])
-print('\r Retorno latente cartera: ', df_results_list[-2].ROCmean[0])
-print('\r Retorno latente indice: ', df_results_list[-2].ROCIndex[0])
+#print('\r\n RESULTADOS SEMANA ACTUAL: ', df_results_list[-2].Date[0] + timedelta(days = 8), ' al ', df_results_list[-2].Date[0] + timedelta(days = 14))
+#print('\r Cartera: ', df_results_list[-2].Ticker[0], df_results_list[-2].Ticker[1], df_results_list[-2].Ticker[2])
+#print('\r Retorno latente cartera: ', df_results_list[-2].ROCmean[0])
+#print('\r Retorno latente indice: ', df_results_list[-2].ROCIndex[0])
 
-print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].Date[0] + timedelta(days = 8), ' al ', df_results_list[-1].Date[0] + timedelta(days = 14))
-print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
+#print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', df_results_list[-1].Date[0] + timedelta(days = 8), ' al ', df_results_list[-1].Date[0] + timedelta(days = 14))
+#print('\r Cartera: ', df_results_list[-1].Ticker[0], df_results_list[-1].Ticker[1], df_results_list[-1].Ticker[2])
+
+
+#print('\r\n SUCCESS RATE: ')
+#print('\r Aciertos:', success)
+#print('\r Fallos:', fail)
+#print('\r Máximo número de fallos consecutivos: ', fail_max)
+#print('\r Tasa:', success/(success + fail))
+
+print('\r\n EQUITY: ')
+print('\r Cartera:', df_portfolio.iloc[-1,-3])
+print('\r Indice:',  df_portfolio.iloc[-1,-1])
+    
+print('\r\n RESULTADOS ÚLTIMA SEMANA: ', (df_portfolio.index[-3] + timedelta(days = 8)).strftime('%d-%m-%Y'), ' al ', (df_portfolio.index[-3] + timedelta(days = 14)).strftime('%d-%m-%Y'))
+print('\r Cartera: ', df_portfolio.iloc[-3,0],  df_portfolio.iloc[-3,1],  df_portfolio.iloc[-3,2])
+print('\r Retorno cartera: ', df_portfolio.iloc[-3,-4])
+print('\r Retorno indice: ', df_portfolio.iloc[-3,-2])
+#print('\r', df_results_list[-2])
+#print('\r', df_results_list[-1])
+print('\r\n RESULTADOS SEMANA ACTUAL: ', (df_portfolio.index[-2] + timedelta(days = 8)).strftime('%d-%m-%Y'), ' al ', (df_portfolio.index[-2] + timedelta(days = 14)).strftime('%d-%m-%Y'))
+print('\r Cartera: ', df_portfolio.iloc[-2,0],  df_portfolio.iloc[-2,1],  df_portfolio.iloc[-2,2])
+print('\r Retorno latente cartera: ', df_portfolio.iloc[-2,-4])
+print('\r Retorno latente indice: ',  df_portfolio.iloc[-2,-2])
+
+print('\r\n COMPOSICIÓN PROVISIONAL SIGUIENTE CARTERA: ', (df_portfolio.index[-1] + timedelta(days = 8)).strftime('%d-%m-%Y'), ' al ', (df_portfolio.index[-1] + timedelta(days = 14)).strftime('%d-%m-%Y'))
+print('\r Cartera: ', df_portfolio.iloc[-1,0],  df_portfolio.iloc[-1,1],  df_portfolio.iloc[-1,2])
+
 
 # %% Plot equity (system + index)
-plt.figure()
-plt.plot(df_equity.Equity)
-plt.plot(df_equity.EquityIndex)
-plt.xlabel('Time - Weeks')
-plt.ylabel('Equity')
+#plt.figure()
+#plt.plot(df_equity.Equity)
+#plt.plot(df_equity.EquityIndex)
+#plt.xlabel('Time - Weeks')
+#plt.ylabel('Equity')
   
-plt.title('Mansfield')
+#plt.title('Mansfield')
+#plt.show()
+
+#%%
+
+fig, ax = plt.subplots()
+df_atr.SAN.plot(ax=ax)
+df_price.SAN.plot(ax=ax, secondary_y=True, alpha=0.3)
 plt.show()
 
+#plt.figure()
+#plt.plot(df_price.SAN)
+#plt.plot(df_sma30.SAN)
+#plt.figure()
+#plt.plot(df_mansfield['SABE'])
+#plt.plot(df_roc['SABE'])
 #plt.figure()
 #plt.plot(df_list[17].mansfieldRP[start_date:end_date]) #Azul
 #plt.plot(df_list[17].Close[start_date:end_date]/df_list[17].Close[start_date]) #Naranja
